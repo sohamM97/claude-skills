@@ -47,11 +47,9 @@ symlink into this repo's `skills/` directory. That means editing a skill at the
 user level edits it here directly — just `git commit && git push` to publish.
 Other machines consume the published versions via the marketplace commands above.
 
-To set up the same symlink-based authoring on a fresh clone:
+To set up (or refresh) the symlinks — run this after cloning, moving the repo,
+or adding a new skill. It is idempotent:
 
 ```bash
-for s in skills/*/; do
-  name="$(basename "$s")"
-  ln -s "$(pwd)/$s" "$HOME/.claude/skills/$name"
-done
+./link-skills.sh
 ```
