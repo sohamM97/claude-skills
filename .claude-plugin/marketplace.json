@@ -1,0 +1,14 @@
+{
+  "name": "soham-skills",
+  "owner": {
+    "name": "Soham Marik"
+  },
+  "description": "Soham's personal collection of Claude Code skills.",
+  "plugins": [
+    {
+      "name": "soham",
+      "source": "./",
+      "description": "Soham's personal collection of Claude Code skills."
+    }
+  ]
+}
