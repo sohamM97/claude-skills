@@ -71,14 +71,14 @@ For **both** platforms, try each rung in order and stop at the first that works:
     -X POST "https://api.github.com/repos/<owner>/<repo>/pulls" \
     -d '{"title":"<title>","head":"<branch>","base":"<target>","body":"<body>"}'
   ```
-- **Bitbucket:** app password / API token in `~/.netrc` (machine `api.bitbucket.org`) or `BITBUCKET_USERNAME` / `BITBUCKET_APP_PASSWORD`:
+- **Bitbucket:** an Atlassian API token authenticates via **Basic auth** using your Atlassian account email as the username and the API token as the password (Bearer auth is not supported). Read the token from `~/.netrc` (machine `api.bitbucket.org`, `login` = Atlassian email, `password` = API token) or from `BITBUCKET_EMAIL` / `BITBUCKET_API_TOKEN`:
   ```bash
-  curl -sS -u "$BITBUCKET_USERNAME:$BITBUCKET_APP_PASSWORD" \
+  curl -sS -u "$BITBUCKET_EMAIL:$BITBUCKET_API_TOKEN" \
     -X POST "https://api.bitbucket.org/2.0/repositories/<workspace>/<repo_slug>/pullrequests" \
     -H "Content-Type: application/json" \
     -d '{"title":"<title>","description":"<body>","source":{"branch":{"name":"<branch>"}},"destination":{"branch":{"name":"<target>"}}}'
   ```
-  Read the PR URL from `links.html.href` in the JSON response.
+  Read the PR URL from `links.html.href` in the JSON response. (Create a token at id.atlassian.com → Security → API tokens.)
 
 **4. Browser link (worst case)** — if none of the above are available, print the prefilled create-PR URL for the user to open, and tell them which auth to set up to automate it next time.
 - **GitHub:** `https://github.com/<owner>/<repo>/compare/<target>...<branch>?expand=1`
