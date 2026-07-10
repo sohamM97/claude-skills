@@ -37,6 +37,10 @@ The skills currently bundled:
 - **`bugfix`** — create a `bugfix/<name>` branch the same way `feature` does,
   then waits for you to describe the bug. Bug-fix edits get a comment documenting
   the behavior before vs. after the fix. Run `/soham:bugfix <short-name>`.
+- **`branch`** — the generic sibling of `feature`/`bugfix`, for work that isn't clearly
+  either (chore, refactor, hotfix, docs, experiment…). Suggests a fitting prefix (which you
+  can override or drop), then creates the branch from an up-to-date base the same way.
+  Run `/soham:branch <short-name>`.
 - **`commit`** — stage the current changes (by name, never `git add -A`), write a
   concise "why"-focused message, and push to the current branch. Never amends or
   force-pushes, and skips secret-looking files. Run `/soham:commit`.
