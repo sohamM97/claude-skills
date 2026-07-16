@@ -40,8 +40,23 @@ If `$ARGUMENTS` was given, use it. Otherwise present these options to the user a
 3. Run `git diff <target>...HEAD` to understand the full changeset.
 4. Check if the current branch is on the remote. If not, push with `git push -u origin HEAD`.
 5. Draft a PR title (short, under 70 chars) and a body summarizing **all** commits — not just the latest.
-6. Create the PR using the platform's escalation ladder below.
-7. Report the PR URL.
+6. **Choose reviewers** — ask the user who to add, offering the repo's default reviewers as the suggested/default set (see below). Include the chosen reviewers in the create request.
+7. Create the PR using the platform's escalation ladder below.
+8. Report the PR URL — and the reviewers that were added, so the user can confirm.
+
+## Reviewers
+
+The web UI auto-populates the repo's **default reviewers**, but the CLI/MCP/API do **not** — so a PR created through this skill opens with **no reviewers** unless you add them explicitly. Before creating the PR:
+
+1. **Fetch the repo's default reviewers as candidates.**
+   - **Bitbucket:** `GET /repositories/<workspace>/<repo_slug>/default-reviewers` (paginate; collect each user's `display_name` + `uuid`).
+   - **GitHub:** there is no repo-level "default reviewers" list (CODEOWNERS are auto-requested by GitHub when the PR opens). Skip the fetch; just offer to add any reviewers the user names.
+2. **Ask the user who to include**, presenting the fetched default reviewers as the pre-selected default (they can drop some or add others). If the fetch returned none / isn't permitted, just ask them to name reviewers (or confirm none).
+3. **Drop the PR author** from the chosen list — Bitbucket rejects the author as their own reviewer and the whole create call fails if present. Get the author via `GET /user` → `uuid` (Bitbucket) and remove any match.
+4. Pass the result in the create request:
+   - **Bitbucket:** `"reviewers": [{"uuid": "{...}"}, ...]` in the body (uuids include the surrounding braces).
+   - **GitHub:** `gh pr create --reviewer <user> --reviewer <user>` (or `"reviewers"` in the API payload).
+   If reviewers can't be added for any reason, create the PR anyway and tell the user you couldn't add them.
 
 ## Creating the PR — escalation ladder
 
