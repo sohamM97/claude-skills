@@ -49,3 +49,36 @@ for src in "$SKILLS_SRC"/*/; do
 done
 
 echo "Done. linked=$linked re-pointed=$repointed backed-up=$backed_up already-ok=$ok -> $SKILLS_DST"
+
+# ---------------------------------------------------------------------------
+# Register the UserPromptSubmit hook in settings.json.
+#
+# Hooks (unlike skills) are NOT activated by symlinking — Claude Code only loads
+# hooks from a settings file or an installed plugin, not from ~/.claude/skills.
+# On this authoring machine the plugin isn't installed (skills are symlinked),
+# so we register the bundled hook directly in settings.json, pointing at the
+# repo script. Idempotent; requires jq (skipped with a note otherwise).
+# ---------------------------------------------------------------------------
+SETTINGS_FILE="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
+HOOK_CMD="bash $REPO_DIR/hooks/stamp-prompt-time.sh"
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "hook: jq not found — skipping. Add a UserPromptSubmit hook running '$HOOK_CMD' to $SETTINGS_FILE manually."
+else
+  [ -f "$SETTINGS_FILE" ] || echo '{}' > "$SETTINGS_FILE"
+  if jq -e --arg cmd "$HOOK_CMD" \
+      '[.hooks.UserPromptSubmit[]?.hooks[]?.command] | index($cmd) != null' \
+      "$SETTINGS_FILE" >/dev/null 2>&1; then
+    echo "hook: stamp-prompt-time already registered in $SETTINGS_FILE"
+  else
+    tmp="$(mktemp)"
+    if jq --arg cmd "$HOOK_CMD" \
+        '.hooks.UserPromptSubmit = ((.hooks.UserPromptSubmit // []) + [{"hooks": [{"type": "command", "command": $cmd}]}])' \
+        "$SETTINGS_FILE" > "$tmp" 2>/dev/null && mv "$tmp" "$SETTINGS_FILE"; then
+      echo "hook: registered stamp-prompt-time in $SETTINGS_FILE (restart Claude Code to activate)"
+    else
+      rm -f "$tmp"
+      echo "hook: could not update $SETTINGS_FILE (invalid JSON?) — register the UserPromptSubmit hook manually."
+    fi
+  fi
+fi

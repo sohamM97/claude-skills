@@ -16,12 +16,20 @@ Each subdirectory of `skills/` is one skill: a `SKILL.md` (required) plus any su
 
 Every `SKILL.md` starts with YAML frontmatter (`name`, `description`, optional `argument-hint`) followed by the instructions. The `description` is what Claude Code matches against to decide when to auto-invoke the skill, so it must name the triggering intent.
 
+## Hooks
+
+The plugin also bundles hooks under `hooks/`:
+- `hooks/hooks.json` — plugin hook registrations, **auto-discovered** on plugin install (no `plugin.json` edit needed). `UserPromptSubmit` entries take **no `matcher`**; reference bundled scripts with `"${CLAUDE_PLUGIN_ROOT}"/hooks/<script>` (double-quoted).
+- `hooks/stamp-prompt-time.sh` — a `UserPromptSubmit` hook that stamps screenshot-related prompts with their epoch submission time (used by `check-screenshot`). Always exits 0 (a non-zero `UserPromptSubmit` exit blocks the prompt).
+
+**Important — hooks only fire when the plugin is installed**, not when skills are merely symlinked (Claude Code has no `~/.claude/skills`-style auto-discovery for hooks). So on the authoring machine (symlink model) a plugin hook is inert. `link-skills.sh` therefore also **registers the hook in `~/.claude/settings.json`** (idempotent, via `jq`), pointing at the repo's `hooks/<script>` absolute path — restart Claude Code to activate. When changing hook behavior, keep `hooks/hooks.json` (consumers) and that settings.json registration logic in sync.
+
 ## Dual authoring/consuming model
 
 - **Other machines** consume published skills via the marketplace commands above (`/plugin marketplace update soham-skills` to refresh).
 - **The authoring machine** (Soham's primary) instead symlinks `~/.claude/skills/<skill>` → this repo's `skills/<skill>` via `./link-skills.sh`. Editing a skill at the user level therefore edits it here directly; publishing is just `git commit && git push`.
 
-Run `./link-skills.sh` after cloning, moving the repo, or adding a new skill. It is idempotent: creates missing links, re-points stale ones (e.g. after a repo move), backs up a colliding real directory to `<name>.bak`, and never touches unrelated local-only skills. It honors `$CLAUDE_CONFIG_DIR` (defaults to `~/.claude`).
+Run `./link-skills.sh` after cloning, moving the repo, or adding a new skill. It is idempotent: creates missing links, re-points stale ones (e.g. after a repo move), backs up a colliding real directory to `<name>.bak`, never touches unrelated local-only skills, and registers the `stamp-prompt-time` hook in settings.json (see Hooks). It honors `$CLAUDE_CONFIG_DIR` (defaults to `~/.claude`).
 
 ## Adding a new skill
 
