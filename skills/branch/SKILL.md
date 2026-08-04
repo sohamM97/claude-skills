@@ -103,3 +103,8 @@ If a worktree for this branch already exists (`git worktree list`), enter that o
 - Don't automatically enter plan mode or start writing code unless the user already
   described the work. Otherwise wait for them to describe what they want. A calling skill
   may override this.
+- **Plan mode when it's earned.** If the user did describe the work, don't ask about plan
+  mode as a reflex — but once you've explored enough to judge the size, suggest it if the
+  work genuinely warrants it: it spans several files or subsystems, there are real design
+  choices to settle, or the approach isn't obvious from the code. Say briefly *why* and let
+  the user decide. For a small, obvious change, skip the offer and just do the work.

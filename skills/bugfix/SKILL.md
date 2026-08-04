@@ -30,5 +30,6 @@ They may also pass **`worktree`** (anywhere in the arguments, e.g. `/bugfix stal
 
 - Always branch from an up-to-date base branch.
 - Once the branch (or worktree) is ready, ask the user what they'd like to do — describe the bug, enter plan mode, or just start working. Do NOT automatically enter plan mode or start writing code.
+- **Plan mode:** follow the `branch` skill's "plan mode when it's earned" rule, plus one bug-specific trigger — a cause that isn't located yet is itself a reason to suggest planning, even if the eventual fix turns out to be small.
 - **Bug fix code comments**: When adding code changes for bug fixes, include a comment documenting the exact bug — behaviour before the fix vs after the fix.
 - **Confirm flow/functionality changes**: If the fix involves changing the flow or functionality itself (not just fixing broken code), always ask the user before implementing. Don't unilaterally make radical design decisions.

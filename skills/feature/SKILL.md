@@ -29,5 +29,6 @@ They may also pass **`worktree`** (anywhere in the arguments, e.g. `/feature pin
 ## Rules
 
 - Always branch from an up-to-date base branch.
-- Once the branch (or worktree) is ready: if the user already described the feature, start by exploring the relevant code to understand the current implementation — don't ask what to do next. Don't ask about plan mode either, just start working.
+- Once the branch (or worktree) is ready: if the user already described the feature, start by exploring the relevant code to understand the current implementation — don't ask what to do next, and don't ask about plan mode as a reflex.
+- **Plan mode:** follow the `branch` skill's "plan mode when it's earned" rule as-is — no reflex offer, but suggest it once you've explored enough to see the feature genuinely warrants one. Never enter plan mode unprompted.
 - If no feature description was given, ask the user to describe what they want.
