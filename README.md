@@ -30,17 +30,23 @@ automatically — no manifest changes needed.
 
 The skills currently bundled:
 
-- **`feature`** — start a new feature. Creates a `feature/<name>` branch from an
-  up-to-date base branch (it detects candidate bases and lets you pick). Run
-  `/soham:feature <short-name>`; if you describe the feature too, it dives
+- **`branch`** — the shared branch-creation skill, and the generic sibling of
+  `feature`/`bugfix` for work that isn't clearly either (chore, refactor, hotfix, docs,
+  experiment…). Detects candidate base branches and lets you pick, suggests a fitting
+  prefix (which you can override or drop), then creates the branch from an up-to-date
+  base. `feature` and `bugfix` delegate to it with the prefix pinned, so the base-branch
+  and worktree logic lives here only. Run `/soham:branch <short-name> [worktree]`.
+- **`feature`** — start a new feature. Creates a `feature/<name>` branch via `branch`.
+  Run `/soham:feature <short-name> [worktree]`; if you describe the feature too, it dives
   straight into the code.
-- **`bugfix`** — create a `bugfix/<name>` branch the same way `feature` does,
-  then waits for you to describe the bug. Bug-fix edits get a comment documenting
-  the behavior before vs. after the fix. Run `/soham:bugfix <short-name>`.
-- **`branch`** — the generic sibling of `feature`/`bugfix`, for work that isn't clearly
-  either (chore, refactor, hotfix, docs, experiment…). Suggests a fitting prefix (which you
-  can override or drop), then creates the branch from an up-to-date base the same way.
-  Run `/soham:branch <short-name>`.
+- **`bugfix`** — create a `bugfix/<name>` branch the same way, then waits for you to
+  describe the bug. Bug-fix edits get a comment documenting the behavior before vs. after
+  the fix. Run `/soham:bugfix <short-name> [worktree]`.
+
+  All three take an optional `worktree` argument. It's off by default; pass it (e.g.
+  `/soham:feature pin-for-today worktree`) to create the branch as a separate git worktree
+  under `.claude/worktrees/` and switch the session into it, leaving your current checkout
+  and its uncommitted changes untouched.
 - **`commit`** — stage the current changes (by name, never `git add -A`), write a
   concise "why"-focused message, and push to the current branch. Never amends or
   force-pushes, and skips secret-looking files. Run `/soham:commit`.

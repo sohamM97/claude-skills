@@ -42,6 +42,12 @@ Run `./link-skills.sh` after cloning, moving the repo, or adding a new skill. It
 
 These recur across the git-workflow skills (`feature`, `bugfix`, `commit`, `pr`) and are worth matching when editing or adding skills:
 
+- **`branch` is the shared implementation.** `feature` and `bugfix` are thin skills that
+  invoke the `branch` skill by name (Skill tool) with the prefix pinned, then layer their
+  own rules on top. Base-branch selection, the workflow steps and worktree mode live only
+  in `skills/branch/SKILL.md` — change them there, not in three places. Cross-skill *file*
+  references don't work (each skill dir is symlinked separately), so delegation is by skill
+  name.
 - **Never assume `main`.** Detect the base/target branch (default branch via `git remote show origin`, then `develop`/`dev`, then latest `release/*`), present only branches that actually exist as options, and let the user pick.
 - **Branch naming:** `feature/<name>` and `bugfix/<name>`, kebab-case.
 - **Commits:** stage files by name (never `git add -A`/`.`), never amend, never force-push, refuse secret-looking files.
