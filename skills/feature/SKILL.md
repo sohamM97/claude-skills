@@ -24,6 +24,8 @@ with the Skill tool (`branch`) and follow its instructions, with these overrides
 
 The user may provide a short feature name (e.g. `pin-for-today`). If not provided, ask them for a brief name.
 
+They may instead point at a **Jira issue** — a `/browse/` URL or a bare key such as `AELIS-1642`. Then follow the `branch` skill's **When the work is a Jira issue** section: read the issue, and name the branch `feature/<ISSUE-KEY>-<short-paraphrase>`, e.g. `feature/AELIS-1642-per-tool-approval`. The `feature/` prefix still applies, and the issue key keeps its capitals.
+
 They may also pass **`worktree`** (anywhere in the arguments, e.g. `/feature pin-for-today worktree`, or phrased as "in a worktree") to do the work in a separate git worktree instead of switching the current checkout. It is optional and **off by default** — if it isn't mentioned, create the branch in place as usual and don't ask about it. When it is given, strip the word from the feature name and follow the `branch` skill's **Worktree mode**.
 
 ## Rules

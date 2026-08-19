@@ -29,6 +29,84 @@ of switching the current checkout. It is optional and **off by default** — if 
 mentioned, create the branch in place as usual and don't ask about it. When it is given,
 strip the word from the branch name and follow **Worktree mode** below.
 
+## When the work is a Jira issue
+
+Applies whenever the user points at a Jira issue instead of (or as well as) giving a name —
+a URL such as `https://automationedge.atlassian.net/browse/AELIS-1798`, or a bare key such as
+`AELIS-1798`. The **issue key** is the last path segment of a `/browse/` URL, so it can always
+be read off the link without opening anything.
+
+### Name the branch after the issue
+
+`<prefix>/<ISSUE-KEY>-<short-description>`, for example:
+
+```
+bugfix/AELIS-1798-conv-dialog-state-undefined
+feature/AELIS-1642-per-tool-approval
+```
+
+- The prefix is unchanged — `/feature` still produces `feature/…`, `/bugfix` still produces
+  `bugfix/…`. The key goes between the prefix and the description.
+- Keep the key in **capitals**, exactly as Jira writes it. This is the single exception to the
+  kebab-case rule, because the key is an identifier people search for.
+- The description is a **short paraphrase you write** — three or four words — not the Jira
+  summary copied out. AELIS-1798's summary is "Not able to store in conv and dialog state";
+  the paraphrase is `conv-dialog-state-undefined`.
+- If the user gave their own name alongside the issue, keep theirs and just insert the key.
+
+### Read the issue before you name it
+
+You cannot paraphrase an issue you have not read. Try these in order, stopping at the first
+that works.
+
+1. **The Atlassian MCP server**, when its tools are connected: `mcp__atlassian__getJiraIssue`.
+   Pass the site hostname as `cloudId` (e.g. `automationedge.atlassian.net`) and ask for the
+   `summary`, `description`, `issuetype`, `fixVersions`, `attachment` and `comment` fields.
+2. **A REST call**, when the MCP server is not connected. Jira Cloud accepts basic auth with an
+   Atlassian account email plus an API token —
+   <https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/>:
+
+   ```bash
+   curl -n -H "Accept: application/json" \
+     "https://<site>.atlassian.net/rest/api/3/issue/<KEY>?fields=summary,description,issuetype,fixVersions,attachment"
+   ```
+
+   `-n` takes the credentials from `~/.netrc`, so no token is typed on the command line. It
+   needs a line `machine <site>.atlassian.net login <email> password <api-token>` in that file.
+
+   **A Bitbucket API token will not work for Jira.** With one, `/rest/api/3/myself` answers
+   `401 Client must be authenticated to access this resource.` and the issue endpoint answers
+   `404 {"errorMessages":["Issue does not exist or you do not have permission to see it."]}`.
+   That 404 looks like a wrong issue key but means the token lacks Jira access. On either
+   response, don't retry or hunt for another key — say which one you got and drop to step 3.
+   Jira tokens are created at <https://id.atlassian.com/manage-profile/security/api-tokens>;
+   suggest adding one to `~/.netrc` so the next run works.
+3. **The user's latest screenshot.** They often have the issue open on screen and screenshot it
+   for you rather than granting API access. Run the `check-screenshot` skill and read the
+   ticket off the image.
+4. **Ask the user** to paste the summary. You can still create the branch from the key alone in
+   the meantime — `bugfix/AELIS-1798` — and rename it once you know more (`git branch -m`).
+
+### Look at the attachments
+
+Bug reports carry screenshots that say more than the description does. When step 1 or 2 worked,
+each entry in the issue's `attachment` array has a `content` URL. Download the images into the
+session scratchpad and **Read** them — the Read tool displays images:
+
+```bash
+curl -n -L -o <scratchpad>/<filename> "<attachment content URL>"
+```
+
+Keep Jira's own filenames so you can name which image you are describing. Skip files that
+aren't images (check `mimeType`) unless they're clearly relevant.
+
+### Check the issue type against the command
+
+If the Jira issue type contradicts the skill that was invoked — `/bugfix` on a Story, or
+`/feature` on a Bug — **stop and ask** before creating anything. Name the actual issue type and
+offer both options: keep the prefix that was typed, or switch to the other skill. Don't pick
+one silently.
+
 ## Choose the prefix
 
 **Skip this section entirely when a calling skill has pinned the prefix** (`/feature` →
@@ -66,6 +144,17 @@ Don't assume `main`. Detect which candidate branches exist (local or remote) and
 
 Only show an option if that branch actually exists, and don't list the same branch twice (e.g. if the current branch is already `main`, options 1 and 2 collapse into one). Use the chosen branch as `<base>` everywhere below.
 
+**A Jira fix version changes which option is the default — it never skips the question.**
+When the issue was read successfully and its `fixVersions` names a version, look for a branch
+called `release/<version>` — fix version `3.8.0` → `release/3.8.0`. If that branch exists, put
+it first in the list and mark it as the recommended option, saying where the recommendation
+came from. **Still ask**, with `AskUserQuestion`, exactly as you would without a Jira issue: a
+matching release branch is a strong hint about intent, not a decision. If the branch does
+**not** exist, say so plainly rather than staying silent — "AELIS-1798 targets 3.8.0, but there
+is no `release/3.8.0` branch" — and let the normal default, the current branch, lead the list.
+An issue with several fix versions, or none, changes nothing: use the normal default and
+mention what you found.
+
 ## Workflow
 
 1. **Check for an existing branch first.** Run `git branch -a | grep -i <name>` to see if a branch with that name (or similar) already exists locally or on the remote. If it does, ask the user if they want to switch to it (and rebase onto `<base>`) instead of creating a new one.
@@ -93,8 +182,13 @@ If a worktree for this branch already exists (`git worktree list`), enter that o
 
 ## Rules
 
-- Branch names must be kebab-case (e.g. `chore/tidy-logging`, not `chore/tidyLogging`).
+- Branch names must be kebab-case (e.g. `chore/tidy-logging`, not `chore/tidyLogging`). The
+  one exception is a Jira issue key, which keeps its capitals — see **When the work is a Jira
+  issue** for the full form, `bugfix/AELIS-1798-conv-dialog-state-undefined`.
 - Always branch from an up-to-date base branch.
+- **The base branch is always the user's choice.** Ask with `AskUserQuestion` every time, even
+  when something in the repo or the Jira issue points strongly at one branch. Those signals
+  decide which option is recommended and listed first, never whether to ask.
 - Suggest a prefix, but never force one — the user may override it or choose no prefix.
   (Not applicable when a calling skill pinned the prefix.)
 - If the work turns out to be a clear feature or bug fix, point the user to `/feature` or
