@@ -29,6 +29,9 @@ of switching the current checkout. It is optional and **off by default** — if 
 mentioned, create the branch in place as usual and don't ask about it. When it is given,
 strip the word from the branch name and follow **Worktree mode** below.
 
+The one exception to "don't ask about it": when the chosen `<base>` is **not** the branch
+currently checked out, always raise it — see workflow step 2.
+
 ## When the work is a Jira issue
 
 Applies whenever the user points at a Jira issue instead of (or as well as) giving a name —
@@ -158,7 +161,11 @@ mention what you found.
 ## Workflow
 
 1. **Check for an existing branch first.** Run `git branch -a | grep -i <name>` to see if a branch with that name (or similar) already exists locally or on the remote. If it does, ask the user if they want to switch to it (and rebase onto `<base>`) instead of creating a new one.
-2. Check that you're on the `<base>` branch. If not, ask the user if they want to switch to `<base>` first (there may be uncommitted work).
+2. **Check whether `<base>` is the branch currently checked out** (`git rev-parse --abbrev-ref HEAD`). If it isn't, **stop and say so by name** — "you're on `feature/agent-framework`, but you asked to branch from `release/3.7.1-IDFC`" — then ask with `AskUserQuestion` which of these they want:
+   - **Switch this checkout to `<base>`** and create the branch there, as in steps 3–5. This moves them off the branch they are on now.
+   - **Create a worktree instead**, leaving the current checkout on its branch — follow **Worktree mode** below. Recommend this when they have work in progress on the current branch, or when the two branches want different dependencies installed.
+
+   Ask even if the working tree is clean: switching branches changes what is in front of them, and they may not realise the base they named isn't where they are. Never switch silently.
 3. Run `git status` to check for uncommitted changes. If there are any, **stop** and tell the user to commit first (or offer to run `/commit`).
 4. Update `<base>` with `git pull` (skip if there's no remote / upstream).
 5. Create and switch to the new branch `<branch>` (e.g. `chore/tidy-logging`). Use kebab-case for the name.
@@ -189,6 +196,10 @@ If a worktree for this branch already exists (`git worktree list`), enter that o
 - **The base branch is always the user's choice.** Ask with `AskUserQuestion` every time, even
   when something in the repo or the Jira issue points strongly at one branch. Those signals
   decide which option is recommended and listed first, never whether to ask.
+- **Never switch the current checkout onto a different base without saying so.** When `<base>`
+  is not the branch already checked out, name both branches and offer the worktree as an
+  alternative to switching (workflow step 2). This holds however the base was chosen — picked
+  from the list, named by the user, or recommended by a Jira fix version.
 - Suggest a prefix, but never force one — the user may override it or choose no prefix.
   (Not applicable when a calling skill pinned the prefix.)
 - If the work turns out to be a clear feature or bug fix, point the user to `/feature` or
