@@ -114,6 +114,14 @@ had to give up.
 
 ## Workflow
 
+0. **Load the repo's own rules first.** Read the repository's `CLAUDE.md` (root and any in
+   subdirectories you are touching) and every `.claude/rules/*.md` whose `paths:` cover the files
+   in scope. Collect what they say about writing, comments and docstrings, including rules for
+   the language of the files in scope (a docstring format such as Google style, type hints,
+   how to cite another file), and any **mechanical check they define** (a grep to run on the
+   diff, a list of words to look for). Run those checks alongside the scanner below and apply
+   their rules alongside this skill's. Where the repo's rule and this skill disagree, the repo's
+   rule wins; say so in the report. If the repo defines none, say that too.
 1. **Find.** Run the scanner from this skill's directory on the scope the user asked for:
    ```bash
    python3 <skill-dir>/find_tells.py                      # uncommitted changes (default)
@@ -130,8 +138,9 @@ had to give up.
    - Uncommitted changes: edit the comments in place.
    - Committed history: never rewrite history. Report, and offer a follow-up commit.
    - Commit messages: rewrite only a message that has not been pushed, and only if asked.
-4. **Report**: per file, what was cut or rebuilt (before → after, briefly), what was kept on
-   purpose and why, and the scanner's counts before and after.
+4. **Report**: which repo rules and checks were applied, then per file what was cut or rebuilt
+   (before → after, briefly), what was kept on purpose and why, and the scanner's counts before
+   and after.
 
 ## What to leave alone
 
