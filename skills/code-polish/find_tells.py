@@ -100,14 +100,78 @@ def commit_messages(rng: str):
                 yield f"commit {sha[:8]}", i, line.strip()
 
 
+FUNCTION_NODES = (ast.FunctionDef, ast.AsyncFunctionDef)
+SECTION_HEADER = re.compile(
+    r"(Args|Returns|Yields|Raises|Attributes|Note|Notes|Example|Examples):"
+)
+
+
+def _named_functions(node, doc: str, function_names: set) -> list:
+    """The other functions of the file that a docstring names.
+
+    Each is a candidate, not a fault: naming one is right only when the caller
+    has to call it next or pass it this function's result.
+    """
+    named = {
+        name
+        for name in re.findall(r"`{1,2}(\w+)(?:\(\))?`{1,2}", doc)
+        if name in function_names and name != node.name
+    }
+    return [f"docstring names {name}" for name in sorted(named)]
+
+
+def _missing_sections(node, doc: str) -> list:
+    """Args: and Returns: sections the signature calls for but the docstring lacks.
+
+    Google lets both go "in cases where the function's name and signature are
+    informative enough that it can be aptly described using a one-line
+    docstring", approximated as at most one parameter, and that one annotated.
+    """
+    if not doc:
+        return []
+    arguments = [
+        a for a in node.args.args + node.args.kwonlyargs if a.arg not in ("self", "cls")
+    ]
+    if len(arguments) <= 1 and all(a.annotation is not None for a in arguments):
+        return []
+
+    faults = []
+    if arguments and "Args:" not in doc:
+        faults.append(f"no Args: for {', '.join(a.arg for a in arguments)}")
+    returns_value = node.returns is not None and not _returns_none(node)
+    if returns_value and "Returns:" not in doc and "Yields:" not in doc:
+        faults.append("no Returns:")
+    return faults
+
+
+def _returns_none(node) -> bool:
+    return isinstance(node.returns, ast.Constant) and node.returns.value is None
+
+
+def _misplaced_sections(node, doc: str) -> list:
+    """A Returns: on a -> None function, an empty Raises:, or prose after a section."""
+    faults = []
+    if _returns_none(node) and "Returns:" in doc:
+        faults.append("Returns: on a -> None function")
+    if re.search(r"Raises:\s*(\n\s*\n|$)", doc):
+        faults.append("empty Raises:")
+    # Once a header has been seen, every later line must be another header,
+    # blank, or an indented continuation of the section.
+    seen_section = False
+    for line in doc.splitlines():
+        if SECTION_HEADER.match(line.strip()) and not line.startswith(" "):
+            seen_section = True
+        elif seen_section and line.strip() and not line.startswith(" "):
+            faults.append("prose after a section")
+            break
+    return faults
+
+
 def docstring_problems(paths):
     """Structural faults in the docstrings of Python files.
 
-    Regex cannot see a missing `Args:` section, so the sections are compared
-    against each signature instead. Google lets both sections go "in cases
-    where the function's name and signature are informative enough that it can
-    be aptly described using a one-line docstring", which is approximated here
-    as: at most one parameter, and that one annotated.
+    Regex cannot see a missing section, so each docstring is compared against
+    its function's signature.
 
     Args:
         paths (list[str]): The files to parse. A file that will not parse is
@@ -123,46 +187,17 @@ def docstring_problems(paths):
             tree = ast.parse(open(path, encoding="utf-8", errors="ignore").read())
         except (SyntaxError, OSError):
             continue
-        for node in ast.walk(tree):
-            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                continue
+        functions = [node for node in ast.walk(tree) if isinstance(node, FUNCTION_NODES)]
+        function_names = {node.name for node in functions}
+        for node in functions:
             doc = ast.get_docstring(node) or ""
-            params = [a.arg for a in (node.args.args + node.args.kwonlyargs)
-                      if a.arg not in ("self", "cls")]
-            annotated = all(
-                a.annotation is not None
-                for a in (node.args.args + node.args.kwonlyargs)
-                if a.arg not in ("self", "cls")
+            faults = (
+                _named_functions(node, doc, function_names)
+                + _missing_sections(node, doc)
+                + _misplaced_sections(node, doc)
             )
-            exempt = len(params) <= 1 and annotated
-            returns_none = (
-                isinstance(node.returns, ast.Constant) and node.returns.value is None
-            )
-
-            if doc and not exempt and params and "Args:" not in doc:
-                missing = ", ".join(params)
-                yield path, node.lineno, f"{node.name}: no Args: for {missing}"
-            if (doc and not exempt and node.returns is not None and not returns_none
-                    and "Returns:" not in doc and "Yields:" not in doc):
-                yield path, node.lineno, f"{node.name}: no Returns:"
-            if returns_none and "Returns:" in doc:
-                yield path, node.lineno, f"{node.name}: Returns: on a -> None function"
-            if re.search(r"Raises:\s*(\n\s*\n|$)", doc):
-                yield path, node.lineno, f"{node.name}: empty Raises:"
-            # Google puts the sections last, after any explanatory prose. Once
-            # a header has been seen, every later line must be another header,
-            # blank, or an indented continuation of the section.
-            header = re.compile(
-                r"(Args|Returns|Yields|Raises|Attributes|Note|Notes|Example|Examples):"
-            )
-            seen_section = False
-            for line in doc.splitlines():
-                if header.match(line.strip()) and not line.startswith(" "):
-                    seen_section = True
-                    continue
-                if seen_section and line.strip() and not line.startswith(" "):
-                    yield path, node.lineno, f"{node.name}: prose after a section"
-                    break
+            for fault in faults:
+                yield path, node.lineno, f"{node.name}: {fault}"
 
 
 def main() -> int:

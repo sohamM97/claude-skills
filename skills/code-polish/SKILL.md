@@ -112,6 +112,10 @@ Check each one the diff writes or edits:
   (<https://google.github.io/styleguide/pyguide.html#s3.8.3-functions-and-methods>).
 - **A module docstring says what the module is for**, not what one function in it does. If it
   reads like a description of a single job, it has drifted into being one function's docstring.
+- **It names another function only when the caller has to act on it** — call it next, or
+  pass it what this one returned. Otherwise it names the stage or the role: "required when the
+  order is submitted", not "`check_stock` requires them". A function gets renamed, merged or
+  deleted without the docstrings that name it noticing.
 - **It does not restate the signature.** "Takes a path and returns a dict" adds nothing over
   `def load(path: Path) -> dict`. Say what the dict holds.
 
@@ -121,9 +125,10 @@ Identifiers carry the same habits, less often. For each function, method, class 
 **the diff introduces**, check:
 
 - **It names the operation** — returns, raises, stores, logs, sends. `record`, `handle` and
-  `process` name nothing; `store_variable`, `log_failure`, `parse_header` do. This applies to
-  a helper nested inside a function too: `decrypted(value)` says what comes back, `secret(value)`
-  does not.
+  `process` name nothing; `store_variable`, `log_failure`, `parse_header` do. A function that
+  does something takes a verb; one that only computes and returns a value may be named for that
+  value. A helper nested inside a function counts: `decrypted(value)` and `value_of(field)` say
+  what comes back, `secret(value)` does not.
 - **A variable or parameter is named for what it holds**, never for how it was got. `found`,
   `result`, `data` and `temp` name the act of getting; `missing_ids`, `parsed_rows` name the
   value. ("Names should be descriptive", section 3.16 of
