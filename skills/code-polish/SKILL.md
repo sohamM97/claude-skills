@@ -41,6 +41,7 @@ Two tests, used as judgement rather than as bans:
 | **Explained significance** | `…, which is why this runs first.` `That is the whole point.` | Cut the closer. The reason, if needed, goes in one plain clause. |
 | **Borrowed metaphor** | guard, seam, load-bearing, plumbing, hydrate, footgun, earns its keep | Name the thing — see the banned list below. |
 | **Vague alternative** | `# use whichever client is configured` | Name the options: `# use the async client if AIO is set, else the sync one`. |
+| **Unnamed set** | `"""Everything a node can be built from."""` | Name the members: `"""The servers, knowledge bases and functions a node uses."""` Same for *anything*, *all of it*. If the list is too long to write, it needed a name of its own. |
 | **Dated note** | `# seen 2024-05-01`, `# for now` | The lasting fact stays; the date and the story go in the commit message. |
 | **Dash aside** | `# retries — up to three times — then raises` | One aside per comment at most; usually two sentences read better. |
 | **", so" chain** | `…, so the cache is cold, so the first call is slow` | One consequence per sentence. |
@@ -93,10 +94,18 @@ docstring, and a long one on a short function is usually carrying one of the abo
 Check each one the diff writes or edits:
 
 - **It is there.** Every function, class and module the diff adds gets one.
-- **It is a one-line summary first**, then only the sections that carry something: no empty
-  `Raises:`, and no `Returns:` on a function annotated `-> None`. Follow whatever docstring
-  format the repo already uses; if it is Google style, give each argument's type in
-  parentheses.
+- **It is a one-line summary first**, then the sections. Google's test for dropping `Args:`
+  and `Returns:` is specific: they "can be omitted in cases where the function's name and
+  signature are informative enough that it can be aptly described using a one-line docstring".
+  So ask it of each parameter — `_flow_switch(switch: dict) -> FlowSwitch` needs nothing, while
+  `build(version, tenant_cipher, cipher)` does, because nothing says which cipher decrypts and
+  which encrypts. A parameter whose meaning is not in its name and type earns an `Args:` entry
+  for every parameter, not just itself. Never an empty `Raises:`, and no `Returns:` on a
+  function annotated `-> None`. Follow the repo's format; under Google style each argument's
+  type goes in parentheses, and the sections come last, after any explanatory prose.
+- **Two functions taking the same argument document it the same way.** If a helper spells out
+  `tenant_cipher` and its caller passes the same value with no `Args:` at all, one of them is
+  wrong.
 - **It says what, not how.** The test: would a caller call it differently for knowing this?
   If not, it is a comment belonging beside the lines it describes. A docstring "describes the
   function's calling syntax and its semantics, but generally not its implementation"
@@ -166,9 +175,14 @@ had to give up.
    python3 <skill-dir>/find_tells.py --range main..HEAD   # a branch's commits and messages
    python3 <skill-dir>/find_tells.py --files path/a.py    # whole files
    ```
-   It lists added comment, docstring and doc lines that match each tell, with counts. The
-   patterns are a floor, not the check: also read every added comment line in the diff and
-   apply the two tests. The misses rarely contain a flagged word.
+   It lists added comment, docstring and doc lines that match each tell, with counts, and for
+   every Python file in scope it parses the source and reports docstring faults a regex cannot
+   see: a parameter with no `Args:` entry, a missing `Returns:`, a `Returns:` on a `-> None`
+   function, an empty `Raises:`, and prose left after a section. It applies Google's exemption,
+   so a function with one annotated parameter is not asked for sections.
+
+   The word patterns are a floor, not the check: also read every added comment line in the diff
+   and apply the two tests. The misses rarely contain a flagged word.
 2. **Judge each hit in context.** Open the file, read the comment with the code it describes,
    and decide: keep, rebuild, or cut. Confirm any factual claim against the code before
    keeping or rewriting it; if you cannot confirm it, say so rather than restating it.

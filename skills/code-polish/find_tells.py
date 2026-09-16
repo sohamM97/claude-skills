@@ -12,6 +12,7 @@ Usage:
 """
 
 import argparse
+import ast
 import re
 import subprocess
 import sys
@@ -41,6 +42,14 @@ TELLS = [
      "fine alone, wrong in bulk: say the fact the word stands for"),
     ("vague alternative", r"\b(whatever|whichever|as appropriate|accordingly|the relevant \w+)\b",
      "name the options being chosen between"),
+    ("unnamed set", r"\b(everything|anything)\b|\ball of it\b",
+     "name the members, or give the set a name of its own"),
+    # Bare "what" and "where" are ordinary English, so only the constructions
+    # that stand in for a named thing are matched.
+    ("vague pointer", r"\bis what\b|\bsays what\b|\bwhat goes\b|\bwhat the \w+ (?:does|shows|is)\b|"
+                      r"\bwhat is (?:stored|sent|returned|passed|configured|set)\b|"
+                      r"\bwhere the \w+ (?:is|are|lives?|goes)\b|\bwhat comes back\b",
+     "name the thing: 'the deployment name is sent', not 'is what goes on the request'"),
     ("dated note", r"\b(seen|checked|as of|verified) (on )?\d{4}-\d{2}-\d{2}\b|\b(for now|currently|"
                    r"at the moment|these days)\b",
      "a date rots in a comment: move it to the commit message or state the lasting fact"),
@@ -91,6 +100,71 @@ def commit_messages(rng: str):
                 yield f"commit {sha[:8]}", i, line.strip()
 
 
+def docstring_problems(paths):
+    """Structural faults in the docstrings of Python files.
+
+    Regex cannot see a missing `Args:` section, so the sections are compared
+    against each signature instead. Google lets both sections go "in cases
+    where the function's name and signature are informative enough that it can
+    be aptly described using a one-line docstring", which is approximated here
+    as: at most one parameter, and that one annotated.
+
+    Args:
+        paths (list[str]): The files to parse. A file that will not parse is
+            skipped.
+
+    Yields:
+        tuple[str, int, str]: The file, the line, and the fault.
+    """
+    for path in paths:
+        if not path.endswith(".py"):
+            continue
+        try:
+            tree = ast.parse(open(path, encoding="utf-8", errors="ignore").read())
+        except (SyntaxError, OSError):
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            doc = ast.get_docstring(node) or ""
+            params = [a.arg for a in (node.args.args + node.args.kwonlyargs)
+                      if a.arg not in ("self", "cls")]
+            annotated = all(
+                a.annotation is not None
+                for a in (node.args.args + node.args.kwonlyargs)
+                if a.arg not in ("self", "cls")
+            )
+            exempt = len(params) <= 1 and annotated
+            returns_none = (
+                isinstance(node.returns, ast.Constant) and node.returns.value is None
+            )
+
+            if doc and not exempt and params and "Args:" not in doc:
+                missing = ", ".join(params)
+                yield path, node.lineno, f"{node.name}: no Args: for {missing}"
+            if (doc and not exempt and node.returns is not None and not returns_none
+                    and "Returns:" not in doc and "Yields:" not in doc):
+                yield path, node.lineno, f"{node.name}: no Returns:"
+            if returns_none and "Returns:" in doc:
+                yield path, node.lineno, f"{node.name}: Returns: on a -> None function"
+            if re.search(r"Raises:\s*(\n\s*\n|$)", doc):
+                yield path, node.lineno, f"{node.name}: empty Raises:"
+            # Google puts the sections last, after any explanatory prose. Once
+            # a header has been seen, every later line must be another header,
+            # blank, or an indented continuation of the section.
+            header = re.compile(
+                r"(Args|Returns|Yields|Raises|Attributes|Note|Notes|Example|Examples):"
+            )
+            seen_section = False
+            for line in doc.splitlines():
+                if header.match(line.strip()) and not line.startswith(" "):
+                    seen_section = True
+                    continue
+                if seen_section and line.strip() and not line.startswith(" "):
+                    yield path, node.lineno, f"{node.name}: prose after a section"
+                    break
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--range", help="commit range, e.g. main..HEAD")
@@ -100,11 +174,14 @@ def main() -> int:
     if args.files:
         lines = [(f, i, l.strip()) for f in args.files
                  for i, l in enumerate(open(f, encoding="utf-8", errors="ignore"), 1)]
+        touched = list(args.files)
     elif args.range:
         lines = list(written_lines_from_diff(run(["git", "diff", "-U0", args.range])))
         lines += list(commit_messages(args.range))
+        touched = run(["git", "diff", "--name-only", args.range]).split()
     else:
         lines = list(written_lines_from_diff(run(["git", "diff", "-U0", "HEAD"])))
+        touched = run(["git", "diff", "--name-only", "HEAD"]).split()
 
     counts: Counter[str] = Counter()
     for name, pattern, advice in TELLS:
@@ -118,6 +195,15 @@ def main() -> int:
             print(f"   {f}:{n}: {t[:110]}")
         if len(hits) > 40:
             print(f"   … {len(hits) - 40} more")
+    docs = list(docstring_problems(touched))
+    if docs:
+        counts["docstring"] = len(docs)
+        print(f"\n== docstring ({len(docs)}) — a section is missing, empty, or out of order")
+        for f, n, problem in docs[:40]:
+            print(f"   {f}:{n}: {problem}")
+        if len(docs) > 40:
+            print(f"   … {len(docs) - 40} more")
+
     print(f"\n{len(lines)} written lines scanned; "
           + (", ".join(f"{k} {v}" for k, v in counts.most_common()) or "no tells found"))
     return 0
