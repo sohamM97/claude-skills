@@ -1,18 +1,19 @@
 ---
-name: code-tells
-description: Find and remove Claude's writing tells from code comments, docstrings, commit messages and short docs — comments that describe the diff instead of the code, unanchored "rather than", judgement adverbs (silently, deliberately), explained significance, borrowed metaphors (guard, seam, load-bearing), dated notes, dash asides and ", so" chains. Use before committing, when reviewing a diff's comments, or when the user asks to clean up, de-slop or humanise comments or commit messages.
+name: code-polish
+description: Make a diff read the way a person wrote it, without changing behaviour. Removes Claude's writing tells from comments, docstrings, commit messages and short docs — comments that describe the diff instead of the code, unanchored "rather than", judgement adverbs (silently, deliberately), explained significance, borrowed metaphors (guard, seam, load-bearing), dated notes, dash asides and ", so" chains — and checks the code the diff introduces: names that name nothing, missing type hints, positional calls that should pass keywords, and missing or misshapen docstrings. Use before committing, when reviewing a diff, or when the user asks to clean up, de-slop, polish or humanise comments, names or commit messages.
 argument-hint: "[report] [--range <a..b> | --files <paths>]"
 ---
 
-# Remove writing tells from comments and commit messages
+# Make a diff read the way a person wrote it
 
 Comments, docstrings and commit messages written with an assistant pick up the same habits
 everywhere: they narrate, justify and decorate instead of saying what the code does. Across
 several real codebases these habits appeared tens of times more often in assistant-written
 comments than in comments people wrote by hand. This skill finds them and rewrites them.
 
-**Scope.** Written text: comments, docstrings, commit messages, and Markdown beside the code.
-Names get a lighter check (see *Names*). Never change behaviour. This skill is self-contained;
+**Scope.** Written text first: comments, docstrings, commit messages, and Markdown beside the
+code. Then the code the diff introduces — its names, signatures and docstrings (see *Names*,
+*Signatures and call sites*, *Docstrings*). Never change behaviour. This skill is self-contained;
 for long documents (READMEs, design docs, blog posts), a general prose skill such as
 `humanizer`, if installed, covers more.
 
@@ -89,16 +90,53 @@ lines it explains, where it cannot drift away from them. History and dated obser
 the commit message. Length follows content: a one-line function usually needs a one-line
 docstring, and a long one on a short function is usually carrying one of the above.
 
+Check each one the diff writes or edits:
+
+- **It is there.** Every function, class and module the diff adds gets one.
+- **It is a one-line summary first**, then only the sections that carry something: no empty
+  `Raises:`, and no `Returns:` on a function annotated `-> None`. Follow whatever docstring
+  format the repo already uses; if it is Google style, give each argument's type in
+  parentheses.
+- **It says what, not how.** The test: would a caller call it differently for knowing this?
+  If not, it is a comment belonging beside the lines it describes. A docstring "describes the
+  function's calling syntax and its semantics, but generally not its implementation"
+  (<https://google.github.io/styleguide/pyguide.html#s3.8.3-functions-and-methods>).
+- **A module docstring says what the module is for**, not what one function in it does. If it
+  reads like a description of a single job, it has drifted into being one function's docstring.
+- **It does not restate the signature.** "Takes a path and returns a dict" adds nothing over
+  `def load(path: Path) -> dict`. Say what the dict holds.
+
 ## Names
 
 Identifiers carry the same habits, less often. For each function, method, class or variable
 **the diff introduces**, check:
 
 - **It names the operation** — returns, raises, stores, logs, sends. `record`, `handle` and
-  `process` name nothing; `store_variable`, `log_failure`, `parse_header` do.
+  `process` name nothing; `store_variable`, `log_failure`, `parse_header` do. This applies to
+  a helper nested inside a function too: `decrypted(value)` says what comes back, `secret(value)`
+  does not.
+- **A variable or parameter is named for what it holds**, never for how it was got. `found`,
+  `result`, `data` and `temp` name the act of getting; `missing_ids`, `parsed_rows` name the
+  value. ("Names should be descriptive", section 3.16 of
+  <https://google.github.io/styleguide/pyguide.html>.)
 - **No metaphor from the banned list** — `check_duplicate_write`, not `write_guard`.
 - **No history** — `new_parser`, `legacy_client`, `fetch_v2` rot the day the old one goes.
   Name what distinguishes it: `streaming_parser`, `sync_client`.
+
+## Signatures and call sites
+
+Two checks on the code the diff introduces, alongside whatever the repo's own rules say:
+
+- **Every function the diff writes or edits is fully typed** — parameters and return, with
+  `-> None` counting. Editing an untyped function means typing the whole signature, not only
+  the parameter touched. Prefer builtin generics (`list[str]`, `tuple[int, str]`) and
+  `Optional[X]` for what may be absent. Skip one parameter only for a reason nameable in a
+  comment, such as a type whose import would cycle, and still write the return type.
+- **Calls pass keyword arguments**: `send_message(channel=channel, body=text, retries=3)`,
+  not `send_message(channel, text, 3)`. Positional is fine for a single argument whose meaning
+  the function name already gives (`len(items)`, `str(error)`, `Path(name)`), and for a logging
+  call's format arguments. A call of three or more positional arguments is the one to look at
+  first: at the call site nothing says which is which.
 
 Leave framework and language conventions alone: `handleClick` in React, `setUp` in unittest,
 `__init__`, `get_queryset`. **Only rename a name the uncommitted diff introduces and nothing

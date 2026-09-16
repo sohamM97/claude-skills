@@ -58,15 +58,19 @@ The skills currently bundled:
   `/soham:save [summary]`.
 - **`load`** — show pending work saved by `save`, across all branches or filtered
   to one. Read-only. Run `/soham:load [branch-name]`.
-- **`code-tells`** — find and remove the writing habits an assistant leaves in code
-  comments, docstrings and commit messages: comments that describe the diff instead of the
-  code, unanchored "rather than", judgement adverbs (*silently*, *deliberately*), sentences
-  that explain their own significance, borrowed metaphors (*guard*, *seam*,
-  *load-bearing*), dated notes, dash asides and ", so" chains. A bundled scanner
-  (`find_tells.py`) lists candidates in the uncommitted diff, a commit range or given files;
-  the skill also loads the repo's own writing and language rules (its `CLAUDE.md` and
-  `.claude/rules/`), runs any checks they define, and lets them win where they differ. It then
-  judges each hit in context and rebuilds or cuts it, never swapping in a synonym. Run `/soham:code-tells [report] [--range a..b | --files paths]`.
+- **`code-polish`** — make a diff read the way a person wrote it, without changing behaviour.
+  Finds the writing habits an assistant leaves in comments, docstrings and commit messages:
+  comments that describe the diff instead of the code, unanchored "rather than", judgement
+  adverbs (*silently*, *deliberately*), sentences that explain their own significance,
+  borrowed metaphors (*guard*, *seam*, *load-bearing*), dated notes, dash asides and ", so"
+  chains. It then checks the code the diff introduces — names that name nothing, missing type
+  hints, calls passing three positional arguments where keywords would say which is which, and
+  docstrings that are missing, restate the signature, or describe how instead of what. A
+  bundled scanner (`find_tells.py`) lists candidates in the uncommitted diff, a commit range or
+  given files; the skill also loads the repo's own writing and language rules (its `CLAUDE.md`
+  and `.claude/rules/`), runs any checks they define, and lets them win where they differ. It
+  judges each hit in context and rebuilds or cuts it, never swapping in a synonym. Run
+  `/soham:code-polish [report] [--range a..b | --files paths]`.
 - **`check-screenshot`** — read and describe your most recent screenshot(s), or
   WhatsApp images with the `whatsapp` argument. Picks the screenshot(s) that were
   newest **when you sent the message** (not any that arrived while Claude was
