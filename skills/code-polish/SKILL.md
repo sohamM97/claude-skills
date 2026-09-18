@@ -43,6 +43,8 @@ Two tests, used as judgement rather than as bans:
 | **Vague alternative** | `# use whichever client is configured` | Name the options: `# use the async client if AIO is set, else the sync one`. |
 | **Unnamed set** | `"""Everything a node can be built from."""` | Name the members: `"""The servers, knowledge bases and functions a node uses."""` Same for *anything*, *all of it*. If the list is too long to write, it needed a name of its own. |
 | **Dated note** | `# seen 2024-05-01`, `# for now` | The lasting fact stays; the date and the story go in the commit message. |
+| **Unmarked example** | `log.error("Tool %s must look like tickets/find", ref)` | Say "for example": `"…in the '<file>/<function>' form"`, or `"…for example tickets/find"`. A bare specific name reads as the value actually in play, worst of all in a log line someone reads mid-incident. |
+| **Pending work stated as behaviour** | `"""Only python tools run today; others are skipped."""` | A docstring states what the code does. Work not done yet goes in a `# TODO:` comment beside the lines it affects, where it reads as pending and gets removed when done. |
 | **Dash aside** | `# retries — up to three times — then raises` | One aside per comment at most; usually two sentences read better. |
 | **", so" chain** | `…, so the cache is cold, so the first call is slow` | One consequence per sentence. |
 
