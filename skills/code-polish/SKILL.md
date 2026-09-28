@@ -48,6 +48,9 @@ Two tests, used as judgement rather than as bans:
 | **Restated rule** | `"""Plugins go here. Each must be async and return a dict."""` | Name the module that owns the rule: `"""Plugins go here; loader.py says what each must be."""` A count, a closed list or another module's rule copied into a docstring goes stale when the owner changes. |
 | **Another language's type name** | `"""A parameter that is not an object is left out."""` above `if isinstance(parameter, dict)` | Name the type the code checks: "a parameter that is not a dict". In Python every value is an object, so JSON's "object" and "array" mean nothing there; a parsed JSON object is a `dict`, an array a `list`. A message shown to a user who writes JSON may keep JSON's words. |
 | **Unmarked example** | `log.error("Tool %s must look like tickets/find", ref)` | Say "for example": `"…in the '<file>/<function>' form"`, or `"…for example tickets/find"`. A bare specific name reads as the value actually in play, worst of all in a log line someone reads mid-incident. |
+| **Vague fix in an error message** | `"Open the dialog and add what it asks."`, `"…and describe it."` | Name the field or part to fill in, in the words the screen uses: `"Open the dialog and add elements."`, `"…and add a description."` The reader acts on the message, so it names what to add. |
+| **"Every message" with no owner** | `label (str): Every message begins with it.` | Say whose messages: `Each error message it returns begins with it.` |
+| **Example away from what it exemplifies** | `label (str): The agent's label. Every message begins with it, for example "Agent 'Triage'".` | Put the example right after the thing it is an example of: `The agent's label, for example "Agent 'Triage'". Every message begins with it.` A reader attaches "for example" to the nearest noun, here "message", so a later example reads as an example of the wrong thing. |
 | **Pending work stated as behaviour** | `"""Only python tools run today; others are skipped."""` | A docstring states what the code does. Work not done yet goes in a `# TODO:` comment beside the lines it affects, where it reads as pending and gets removed when done. |
 | **Dash aside** | `# retries — up to three times — then raises` | One aside per comment at most; usually two sentences read better. |
 | **", so" chain** | `…, so the cache is cold, so the first call is slow` | One consequence per sentence. |
@@ -70,6 +73,7 @@ commit messages and chat:
 | guard | the check that stops X — name what it stops |
 | seam | where the two parts meet — name the argument, function or module |
 | footgun, magic | say what goes wrong, or what the code does without being asked |
+| fault (for an error a check reports) | error: "One message per error." |
 
 The general test: if a term needs the reader to have read the source to parse it, it belongs
 in the source, not the explanation. A word that grades the thing ("critical", "elegant",
@@ -81,9 +85,20 @@ in the source, not the explanation. A word that grades the thing ("critical", "e
 - *half* standing for a named part (*the private half*) — name the part: *the private key*.
   Real fractions ("half the requests") are fine.
 - *the whole of it* — *all of it*, *everything*, or give the total.
-- *prose* meaning "text formatted some way" — say how: *sentences, no `Args:` section*.
+- *prose* meaning "text formatted some way" — name the format: *sentences, no `Args:`
+  section*.
 - *which is exactly why…*, *that is exactly what…* — state the relationship plainly, or put the
   two facts side by side.
+
+**Soft-banned: check every use, not only clusters.** Each can stand in for a fact the reader
+was never told:
+
+- *name* as a verb for a reference (*the dialogs its agents name*, *the tools a node names*) —
+  it says one thing points at another, not what it is used for. Say the use: *the dialogs its
+  agents can call as tools*. Naming something ("a variable named `x`") is fine.
+- *how* standing in for the answer (*how each message names the dialog*, *explains how it
+  works*) — give the answer: *the text each message begins with, for example "Dialog 'Raise
+  Ticket'"*. A real question in chat is fine.
 
 Frequency matters more than any single hit. One "rather than" that names a real alternative is
 fine; five in a file is a habit. **Never fix a tell by swapping in a synonym** — "quietly" for
