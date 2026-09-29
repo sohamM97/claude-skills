@@ -137,6 +137,14 @@ Check each one the diff writes or edits:
   pass it what this one returned. Otherwise it names the stage or the role: "required when the
   order is submitted", not "`check_stock` requires them". A function gets renamed, merged or
   deleted without the docstrings that name it noticing.
+- **It does not list what the function reads from an argument.** "The stored order, for its
+  total and currency" and "decrypts the API key" go wrong the day the function reads another
+  field or handles another secret. Write "The stored order" and "decrypts the order's secrets".
+  Naming the one item is right only when a second can never come.
+- **It never assumes who calls the function.** Describe each argument by what the function does
+  with it, not by where today's caller got it or why it calls: "the orders being shipped" and
+  "the orders from `load_orders`" go wrong when a second caller appears. "The orders whose
+  lines are totalled" holds for every caller.
 - **It does not restate the signature.** "Takes a path and returns a dict" adds nothing over
   `def load(path: Path) -> dict`. Say what the dict holds.
 
@@ -148,8 +156,10 @@ Identifiers carry the same habits, less often. For each function, method, class 
 - **It names the operation** — returns, raises, stores, logs, sends. `record`, `handle` and
   `process` name nothing; `store_variable`, `log_failure`, `parse_header` do. A function that
   does something takes a verb; one that only computes and returns a value may be named for that
-  value. A helper nested inside a function counts: `decrypted(value)` and `value_of(field)` say
-  what comes back, `secret(value)` does not.
+  value. A helper nested inside a function counts: `value_of(field)` says what comes back,
+  `field_data(field)` does not. A helper that only calls another function with some arguments
+  fixed, such as `decrypted(value)` for `decrypt(value, key)`, should not exist: call the
+  function, so each call shows the arguments that decide what it does.
 - **A variable or parameter is named for what it holds**, never for how it was got. `found`,
   `result`, `data` and `temp` name the act of getting; `missing_ids`, `parsed_rows` name the
   value. ("Names should be descriptive", section 3.16 of
