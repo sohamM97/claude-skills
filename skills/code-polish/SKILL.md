@@ -167,6 +167,10 @@ Identifiers carry the same habits, less often. For each function, method, class 
 - **No metaphor from the banned list** — `check_duplicate_write`, not `write_guard`.
 - **No history** — `new_parser`, `legacy_client`, `fetch_v2` rot the day the old one goes.
   Name what distinguishes it: `streaming_parser`, `sync_client`.
+- **An import is renamed only when its name clashes** with another in the file. `from
+  schema import User as UserSchema` is right beside an ORM `User`. `Invoice as InvoiceSchema`
+  is not when nothing else there is called `Invoice`: the reader has to learn a second name for
+  one thing.
 
 ## Signatures and call sites
 
