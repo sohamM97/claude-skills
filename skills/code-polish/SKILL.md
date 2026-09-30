@@ -49,11 +49,32 @@ Two tests, used as judgement rather than as bans:
 | **Another language's type name** | `"""A parameter that is not an object is left out."""` above `if isinstance(parameter, dict)` | Name the type the code checks: "a parameter that is not a dict". In Python every value is an object, so JSON's "object" and "array" mean nothing there; a parsed JSON object is a `dict`, an array a `list`. A message shown to a user who writes JSON may keep JSON's words. |
 | **Unmarked example** | `log.error("Tool %s must look like tickets/find", ref)` | Say "for example": `"…in the '<file>/<function>' form"`, or `"…for example tickets/find"`. A bare specific name reads as the value actually in play, worst of all in a log line someone reads mid-incident. |
 | **Vague fix in an error message** | `"Open the dialog and add what it asks."`, `"…and describe it."` | Name the field or part to fill in, in the words the screen uses: `"Open the dialog and add elements."`, `"…and add a description."` The reader acts on the message, so it names what to add. |
-| **"Every message" with no owner** | `label (str): Every message begins with it.` | Say whose messages: `Each error message it returns begins with it.` |
+| **"Every message" with no owner** | `label (str): Every message begins with it.` | Say whose messages: `Each error message this function returns begins with it.` |
 | **Example away from what it exemplifies** | `label (str): The agent's label. Every message begins with it, for example "Agent 'Triage'".` | Put the example right after the thing it is an example of: `The agent's label, for example "Agent 'Triage'". Every message begins with it.` A reader attaches "for example" to the nearest noun, here "message", so a later example reads as an example of the wrong thing. |
 | **Pending work stated as behaviour** | `"""Only python tools run today; others are skipped."""` | A docstring states what the code does. Work not done yet goes in a `# TODO:` comment beside the lines it affects, where it reads as pending and gets removed when done. |
 | **Dash aside** | `# retries — up to three times — then raises` | One aside per comment at most; usually two sentences read better. |
 | **", so" chain** | `…, so the cache is cold, so the first call is slow` | One consequence per sentence. |
+
+### Referents: every *it* points at one thing
+
+Every pronoun, back-reference and definite noun points at exactly one thing, and a reader
+holding only the text before it can say which. The sentence reads fine to its writer, who knows
+the answer, so this is checked by reading, not by feel. **Check every one the diff writes**, not
+only the ones the scanner flags. When there is any doubt, name the thing.
+
+| Referring phrase | Unclear | Clear |
+|---|---|---|
+| Two pronouns, two referents | `Each error message it returns begins with it.` (the function, then the label) | `Each error message this function returns begins with it.` |
+| Pronoun whose referent is a sentence back | `Loads the orders. It skips a cancelled one.` (the function or the order list?) | `Loads the orders, skipping a cancelled one.` |
+| Elliptical *own* | `Checks the invoice's lines against the order's own.` | `Checks the invoice's lines against the order's lines.` |
+| *both*, *the latter*, *the former*, *as above*, *the same* | `The latter is retried.` | `The upload is retried.` |
+| Definite noun with two candidates | `Merges the list into the cache.` in a function taking two lists | `Merges the fetched rows into the cache.` |
+| A word used for two things | `"orders"` for both the stored rows and their ids | Give each its own name: `orders` and `order_ids`. |
+
+The fix is always the name of the thing. Swapping one pronoun for another, or for a synonym,
+leaves the reader guessing just the same. The same goes for identifiers: two fields of one name
+holding different things (a list of records and a list of their names) make every sentence
+about either one ambiguous, so rename one field before rewording anything.
 
 ### Banned words, and what to write instead
 

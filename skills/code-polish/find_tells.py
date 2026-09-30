@@ -50,6 +50,12 @@ TELLS = [
                       r"\bwhat is (?:stored|sent|returned|passed|configured|set)\b|"
                       r"\bwhere the \w+ (?:is|are|lives?|goes)\b|\bwhat comes back\b",
      "name the thing: 'the deployment name is sent', not 'is what goes on the request'"),
+    # A pronoun is ordinary English, so only the forms most often left pointing
+    # at nothing, or at two things, are matched: two "it"s in one sentence, a
+    # sentence opening on a pronoun, an elliptical "own", and back-references.
+    ("referent", r"\bit\b[^.]*\bit\b|\b(the latter|the former|as above)\b|\b\w+'s own\b|"
+                 r"\bits own\b|(?:^|[.:]\s+)(?-i:It|This|That|These|They|Both)\b",
+     "name the thing each pronoun or back-reference points at"),
     ("dated note", r"\b(seen|checked|as of|verified) (on )?\d{4}-\d{2}-\d{2}\b|\b(for now|currently|"
                    r"at the moment|these days)\b",
      "a date rots in a comment: move it to the commit message or state the lasting fact"),
