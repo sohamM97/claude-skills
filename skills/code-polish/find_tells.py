@@ -46,6 +46,19 @@ TELLS = [
      "name the members, or give the set a name of its own"),
     # Bare "what" and "where" are ordinary English, so only the constructions
     # that stand in for a named thing are matched.
+    # A sentence opening on a question word often describes a thing without
+    # naming it: "What every cache key starts with.", "How long listen waits."
+    # Matched at the start of a comment or docstring line, or after a full stop
+    # or colon. "When the socket closes, it unsubscribes" is a real sentence
+    # and passes on reading. After a colon "When" and "Why" are left out: a
+    # Raises: entry such as "ValueError: When the port is not a number." is the
+    # usual form.
+    ("question-word opener",
+     r"(?:^|\.\s+|^\s*(?:#|//|\*|\"\"\"|''')\s*)"
+     r"(?-i:What|Where|When|Which|Who|Whose|Why|How)\b"
+     r"|:\s+(?-i:What|Where|Which|Who|Whose|How)\b",
+     "name the thing first: 'Every cache key starts with this prefix', "
+     "not 'What every cache key starts with'"),
     ("vague pointer", r"\bis what\b|\bsays what\b|\bwhat goes\b|\bwhat the \w+ (?:does|shows|is)\b|"
                       r"\bwhat is (?:stored|sent|returned|passed|configured|set)\b|"
                       r"\bwhere the \w+ (?:is|are|lives?|goes)\b|\bwhat comes back\b",

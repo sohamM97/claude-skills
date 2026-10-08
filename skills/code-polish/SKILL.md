@@ -40,6 +40,7 @@ Two tests, used as judgement rather than as bans:
 | **Judgement adverb** | `# fails silently`, `# deliberately not cached` | Say what happens: `# returns None without logging`, `# not cached: the value changes per request`. |
 | **Explained significance** | `…, which is why this runs first.` `That is the whole point.` | Cut the closer. The reason, if needed, goes in one plain clause. |
 | **Borrowed metaphor** | guard, seam, load-bearing, plumbing, hydrate, footgun, earns its keep | Name the thing — see the banned list below. |
+| **Sentence opening with a question word** — *what, where, when, which, who, whose, why, how* | `# What every cache key starts with.`, `# How long listen waits for a reply.`, `"""Where the flow is stored."""` | The sentence has no subject: it describes a thing without naming it. Name it first: `# Every cache key starts with this prefix.`, `# Seconds listen waits for a reply.` A real clause passes: `# When the socket closes, the process unsubscribes.` |
 | **Vague alternative** | `# use whichever client is configured` | Name the options: `# use the async client if AIO is set, else the sync one`. |
 | **Unnamed set** | `"""Everything a node can be built from."""` | Name the members: `"""The servers, knowledge bases and functions a node uses."""` Same for *anything*, *all of it*. If the list is too long to write, it needed a name of its own. |
 | **Dated note** | `# seen 2024-05-01`, `# for now` | The lasting fact stays; the date and the story go in the commit message. |
