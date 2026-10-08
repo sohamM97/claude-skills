@@ -56,6 +56,12 @@ TELLS = [
     ("referent", r"\bit\b[^.]*\bit\b|\b(the latter|the former|as above)\b|\b\w+'s own\b|"
                  r"\bits own\b|(?:^|[.:]\s+)(?-i:It|This|That|These|They|Both)\b",
      "name the thing each pronoun or back-reference points at"),
+    # Every system has its own replicas, nodes, workers, clients and sessions,
+    # so one with no owner between it and its article is matched: "other
+    # replicas" is, "a Redis replica" is not.
+    ("whose", r"\b(a|an|the|other|each|every|one|another|any|more|two)\s+"
+              r"(replicas?|nodes?|workers?|clients?|sessions?)\b",
+     "say whose: 'a Redis replica', 'other app processes'"),
     ("dated note", r"\b(seen|checked|as of|verified) (on )?\d{4}-\d{2}-\d{2}\b|\b(for now|currently|"
                    r"at the moment|these days)\b",
      "a date rots in a comment: move it to the commit message or state the lasting fact"),

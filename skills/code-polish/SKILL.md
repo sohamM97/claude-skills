@@ -70,6 +70,7 @@ only the ones the scanner flags. When there is any doubt, name the thing.
 | *both*, *the latter*, *the former*, *as above*, *the same* | `The latter is retried.` | `The upload is retried.` |
 | Definite noun with two candidates | `Merges the list into the cache.` in a function taking two lists | `Merges the fetched rows into the cache.` |
 | A word used for two things | `"orders"` for both the stored rows and their ids | Give each its own name: `orders` and `order_ids`. |
+| Bare *replica*, *node*, *worker*, *client* or *session* | `Lost the connection to Redis; replies made on other replicas cannot reach this one.` (Redis's replicas, or the app's?) | `…replies made by other app processes cannot reach this one.` Every system has its own, so name the owner each time — "a Redis replica", "a web server pod" — even when only one system is in the passage. |
 
 The fix is always the name of the thing. Swapping one pronoun for another, or for a synonym,
 leaves the reader guessing just the same. The same goes for identifiers: two fields of one name
