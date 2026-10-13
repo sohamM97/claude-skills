@@ -75,6 +75,10 @@ TELLS = [
     ("whose", r"\b(a|an|the|other|each|every|one|another|any|more|two)\s+"
               r"(replicas?|nodes?|workers?|clients?|sessions?)\b",
      "say whose: 'a Redis replica', 'other app processes'"),
+    ("nothing as the event", r"\b(does|do|did|sends|returns|saves|stores|writes|runs|"
+                             r"yields|logs|shows|happens)\s+nothing\b",
+     "name the exact thing: 'returns None', 'sends no message to the next step', "
+     "'returns before writing the cache'"),
     ("dated note", r"\b(seen|checked|as of|verified) (on )?\d{4}-\d{2}-\d{2}\b|\b(for now|currently|"
                    r"at the moment|these days)\b",
      "a date rots in a comment: move it to the commit message or state the lasting fact"),
