@@ -117,9 +117,14 @@ in the source, not the explanation. A word that grades the thing ("critical", "e
 **Soft-banned: check every use, not only clusters.** Each can stand in for a fact the reader
 was never told:
 
-- *name* as a verb for a reference (*the dialogs its agents name*, *the tools a node names*) —
-  it says one thing points at another, not what it is used for. Say the use: *the dialogs its
-  agents can call as tools*. Naming something ("a variable named `x`") is fine.
+- *names*, *named*, *naming* as verbs — avoid them altogether. *The dialogs its agents name*
+  says one thing points at another, not what it is used for: say the use, *the dialogs its
+  agents can call as tools*. *Uses*, *calls*, *reads*, *refers to* or *is called* each say more:
+  "the node using LLM client `x`", "a variable called `x`", "the error message gives the node's
+  id". *Name* as a noun ("the tool's name") is fine.
+- *hold*, *holds* (*the condition holds*, *the graph cannot hold it*) — say the result: *the
+  condition is true*, *returns True*, *`build()` raises for it*. *Holds* meaning "contains a
+  value" (*`variables` holds the run's values*) is fine.
 - *how* standing in for the answer (*how each message names the dialog*, *explains how it
   works*) — give the answer: *the text each message begins with, for example "Dialog 'Raise
   Ticket'"*. A real question in chat is fine.

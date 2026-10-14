@@ -79,6 +79,10 @@ TELLS = [
                              r"yields|logs|shows|happens)\s+nothing\b",
      "name the exact thing: 'returns None', 'sends no message to the next step', "
      "'returns before writing the cache'"),
+    # "names" is also the plural noun, so every match is read, not replaced.
+    ("name as a verb", r"\b(naming|named|names)\b",
+     "say the use: 'the node using LLM client x', 'a variable called x', "
+     "'the dialogs its agents can call as tools'"),
     ("dated note", r"\b(seen|checked|as of|verified) (on )?\d{4}-\d{2}-\d{2}\b|\b(for now|currently|"
                    r"at the moment|these days)\b",
      "a date rots in a comment: move it to the commit message or state the lasting fact"),
