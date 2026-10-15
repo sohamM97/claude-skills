@@ -43,6 +43,7 @@ If `$ARGUMENTS` was given, use it. Otherwise present these options to the user a
 6. **Choose reviewers** — ask the user who to add, offering the repo's default reviewers as the suggested/default set (see below). Include the chosen reviewers in the create request.
 7. Create the PR using the platform's escalation ladder below.
 8. Report the PR URL — and the reviewers that were added, so the user can confirm.
+9. **Suggest `/code-review` on the PR's changes, every time**, in the same message as the URL: give the exact command, with the range the PR covers, for example `/code-review origin/develop...HEAD`. A bare `/code-review` may cover only unpushed commits, and a branch just pushed for its PR has none. Suggest it even when the repo's own instructions limit reviews to large changes: opening a PR is the point where a review is offered. Do not run it unasked.
 
 ## Reviewers
 
