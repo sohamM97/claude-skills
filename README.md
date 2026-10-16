@@ -71,6 +71,14 @@ The skills currently bundled:
   and `.claude/rules/`), runs any checks they define, and lets them win where they differ. It
   judges each hit in context and rebuilds or cuts it, never swapping in a synonym. Run
   `/soham:code-polish [report] [--range a..b | --files paths]`.
+- **`doc-polish`** — restructure a design doc or investigation write-up so its main point
+  comes first. Moves code samples, internal file paths and call chains out of the main text
+  into a numbered Notes section (plain headings, since `[^footnotes]` don't render in every
+  viewer), keeps the experiment code that shows how a result was measured, labels each claim
+  as measured, read in the source or estimated, and fixes layout faults such as a table with
+  no blank line after it or one letter used for two things. Its wording follows
+  `code-polish`'s language rules, and it runs that skill's scanner on the doc. Run
+  `/soham:doc-polish <doc> [report]`.
 - **`check-screenshot`** — read and describe your most recent screenshot(s), or
   WhatsApp images with the `whatsapp` argument. Picks the screenshot(s) that were
   newest **when you sent the message** (not any that arrived while Claude was
